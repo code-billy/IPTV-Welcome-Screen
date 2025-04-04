@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <title>Welcome Screen</title>
+</head>
+
+<body>
+    <img src="assets/logo.webp" alt="Maya Villa Logo" class="logo">
+    
+    <div class="welcome">
+        <h1>Welcome to</h1>
+        <p>Maya Villa</p>
+        <p>Hotel &#8226; Suites &#8226; Conferences</p>
+    </div>
+
+    <div class="container">
+        <h2>Hi, <span id="guestName">Guest</span>!</h2>
+        <p>Your Room: <span id="roomNumber">Loading...</span></p>
+        <p style="background-color: white; padding: 10px; color: black; border-radius: 10px;">Check-in: <span id="checkInDate">Loading...</span></p>
+        <p style="background-color: white; padding: 10px; color: black; border-radius: 10px;">Check-out: <span id="checkOutDate">Loading...</span></p>
+        <a href="http://192.168.2.36:32400/web" class="btn">WATCH MOVIES & TV</a>
+        <a href="https://dobiison.com/Ghana/MayaVilla/" class="btn">TAKE A VIRTUAL TOUR</a>
+    </div>
+
+    <script>
+        // Get room number from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const room = urlParams.get('room');
+        if (room) {
+            fetch(`http://192.168.2.36:5000/api/guest/${room}`)
+                .then(response => response.json())
+                .then(data => {
+                    const guestNameEl = document.getElementById("guestName");
+                    const roomNumberEl = document.getElementById("roomNumber");
+                    const checkInDateEl = document.getElementById("checkInDate");
+                    const checkOutDateEl = document.getElementById("checkOutDate");
+
+                    if (guestNameEl) guestNameEl.textContent = data.name;
+                    if (roomNumberEl) roomNumberEl.textContent = data.room;
+
+                    // Format dates properly
+                    const formatDate = (dateString) => {
+                        if (!dateString) return "N/A"; // Handle empty dates
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-GB', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }).split('/').reverse().join('-');
+                    };
+
+                    if (checkInDateEl) checkInDateEl.textContent = formatDate(data.check_in);
+                    if (checkOutDateEl) checkOutDateEl.textContent = formatDate(data.check_out);
+            })
+            .catch(error => console.error("Error fetching guest data:", error));
+        }
+    </script>
+
+</body>
+</html>

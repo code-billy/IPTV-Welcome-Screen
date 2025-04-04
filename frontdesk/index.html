@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maya Villa - Front Desk Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-family: 'Anton', sans-serif;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .actions {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: royalblue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: dodgerblue;
+        }
+
+        .guest-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .guest-table th,
+        .guest-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .guest-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .guest-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Maya Villa Front Desk Portal</h1>
+        <p>Guest Management System</p>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <button class="btn" onclick="showAddModal()">Add New Guest</button>
+            <button class="btn" onclick="refreshGuestList()">Refresh List</button>
+        </div>
+
+        <table class="guest-table">
+            <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Guest Name</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="guestList">
+                <!-- Guest data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add/Edit Guest Modal -->
+    <div id="guestModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Guest</h2>
+            <form id="guestForm">
+                <div class="form-group">
+                    <label for="room">Room Number:</label>
+                    <input type="text" id="room" name="room" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Guest Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="check_in">Check-in Date:</label>
+                    <input type="date" id="check_in" name="check_in" required>
+                </div>
+                <div class="form-group">
+                    <label for="check_out">Check-out Date:</label>
+                    <input type="date" id="check_out" name="check_out" required>
+                </div>
+                <button type="submit" class="btn">Save</button>
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentGuestId = null;
+
+        // Fetch and display all guests
+        function refreshGuestList() {
+            fetch('http://192.168.2.36:8080/api/guests')
+                .then(response => response.json())
+                .then(guests => {
+                    const guestList = document.getElementById('guestList');
+                    guestList.innerHTML = '';
+                    
+                    guests.forEach(guest => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${guest.room || ''}</td>
+                            <td>${guest.name || ''}</td>
+                            <td>${formatDate(guest.check_in)}</td>
+                            <td>${formatDate(guest.check_out)}</td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="editGuest('${guest.room}')">Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteGuest('${guest.room}')">Delete</button>
+                            </td>
+                        `;
+                        guestList.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching guests:', error));
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).split('/').reverse().join('-');
+        }
+
+        // Parse date for API
+        function parseDate(dateString) {
+            if (!dateString) return '';
+            const [year, month, day] = dateString.split('-');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Show modal for adding new guest
+        function showAddModal() {
+            currentGuestId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Guest';
+            document.getElementById('guestForm').reset();
+            document.getElementById('guestModal').style.display = 'block';
+        }
+
+        // Show modal for editing guest
+        function editGuest(room) {
+            currentGuestId = room;
+            document.getElementById('modalTitle').textContent = 'Edit Guest';
+            
+            fetch(`http://192.168.2.36:8080/api/guest/${room}`)
+                .then(response => response.json())
+                .then(guest => {
+                    document.getElementById('room').value = guest.room;
+                    document.getElementById('name').value = guest.name;
+                    document.getElementById('check_in').value = parseDate(guest.check_in);
+                    document.getElementById('check_out').value = parseDate(guest.check_out);
+                    document.getElementById('guestModal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching guest:', error));
+        }
+
+        // Handle form submission
+        document.getElementById('guestForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                room: document.getElementById('room').value,
+                name: document.getElementById('name').value,
+                check_in: document.getElementById('check_in').value,
+                check_out: document.getElementById('check_out').value
+            };
+
+            const url = currentGuestId 
+                ? `http://192.168.2.36:8080/api/guest/${currentGuestId}`
+                : 'http://192.168.2.36:8080/api/guest';
+            
+            const method = currentGuestId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    closeModal();
+                    refreshGuestList();
+                }
+            })
+            .catch(error => {
+                console.error('Error saving guest:', error);
+                alert('Failed to save guest data');
+            });
+        };
+
+        // Delete guest
+        function deleteGuest(room) {
+            if (confirm('Are you sure you want to delete this guest?')) {
+                fetch(`http://192.168.2.36:8080/api/guest/${room}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        refreshGuestList();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting guest:', error);
+                    alert('Failed to delete guest');
+                });
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('guestModal').style.display = 'none';
+        }
+
+        // Load guest list on page load
+        document.addEventListener('DOMContentLoaded', refreshGuestList);
+    </script>
+</body>
+</html>

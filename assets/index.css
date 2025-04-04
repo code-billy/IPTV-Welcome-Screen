@@ -1,0 +1,78 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: url('gb.jpg') no-repeat center center/cover;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    position: relative;
+}
+
+.welcome{
+    padding: 100px;
+}
+
+.welcome h1{
+    text-align: left;
+    line-height: 0.05em;
+}
+
+.welcome p{
+    text-align: left;
+}
+
+.welcome p:nth-child(2){
+    font-family: Anton;
+    font-weight: bolder;
+    font-size: 80px;
+}
+
+.container {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 50px 30px;
+    border-radius: 15px;
+    width: 350px;
+}
+
+
+
+h1 {
+    font-size: 28px;
+    margin-right: 10px;
+}
+
+p {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 20px 45px;
+    background: royalblue;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    border-radius: 8px;
+    transition: 0.3s ease-in-out;
+}
+
+.btn:hover {
+    background: dodgerblue;
+}
+
+.logo {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    width: 120px;
+}
